@@ -1,0 +1,37 @@
+{
+  "name": "lelylan.mqtt",
+  "description": "Lelylan MQTT broket",
+  "version": "0.1.0",
+  "author": "Lelylan Dev Team <dev@lelylan.com>",
+  "scripts": {
+    "start": "node app.js",
+    "test": "make bail"
+  },
+  "dependencies": {
+    "ascoltatori": "^0.11.5",
+    "async": "^0.1.22",
+    "bunyan": "^0.21.4",
+    "debug": "^0.7.4",
+    "foreman": "0.0.25",
+    "mosca": "^0.26.2",
+    "mqtt": "~0.3.1",
+    "redis": "^0.12.1",
+    "request": "^2.11.4"
+  },
+  "engines": {
+    "node": "~0.10.x",
+    "npm": "~1.1.x"
+  },
+  "devDependencies": {
+    "mocha": "~1.11.0",
+    "nock": "~0.13.7",
+    "database-cleaner": "~0.7.0",
+    "factory-lady": "~0.1.0",
+    "supertest": "~0.7.0",
+    "async": "~0.1.22",
+    "chai": "~1.7.2",
+    "sinon": "~1.7.3",
+    "sinon-chai": "~2.4.0",
+    "chai-fuzzy": "~1.3.0"
+  }
+}

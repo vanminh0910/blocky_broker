@@ -1,0 +1,10 @@
+version: '2'
+services:
+  broker:
+    build: .
+    ports:
+     - "1883:1883"
+    volumes:
+     - .:/code
+  redis:
+    image: "redis:alpine"
