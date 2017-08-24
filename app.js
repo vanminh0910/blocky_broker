@@ -19,23 +19,25 @@ var settings = {
 var app = new server.start(settings);
 
 app.on('published', function(packet, client) {
-  if (packet.topic.indexOf('$SYS') === 0 || !client || !client.authKey)
+  if (packet.topic.indexOf('$SYS') === 0)
     return; // doesn't print stats info
 
   debug('ON PUBLISHED', packet.payload.toString(), 'on topic', packet.topic);
-
+  
   var topicPrefix = '/' + client.authKey;
 
-  if (packet.topic.indexOf(topicPrefix) !== 0) 
-    return;  
+  if (packet.topic.indexOf(topicPrefix) !== 0 || packet.payload.toString() == '') 
+    return;
   
   // save message to backend  
   var topic = packet.topic.replace(topicPrefix, '');
+
   var postData = {
-    authKey: client.authKey,
+    authKey: client.authKey.toString(),
     topic: topic,
-    payload: packet.payload.toString()
+    data: packet.payload.toString()
   }
+
 
   request({
     method: 'post',
@@ -54,9 +56,9 @@ app.on('published', function(packet, client) {
     if (response.statusCode == 200) {
       debug('Sent message to backend successfully');
     } else {
+      debug(body);
       debug('Failed to send message to backend');
-    }   
-    
+    }    
   });
 });
 
@@ -90,8 +92,8 @@ app.on('clientDisconnected', function(client) {
 
   // update device status to offline
   var postData = {
-    authKey: client.authKey,
-    chipId: client.chipId,
+    authKey: client.authKey.toString(),
+    chipId: client.chipId.toString(),
     status: 0 //0: offline, 1: online
   }
 
@@ -112,7 +114,7 @@ app.on('clientDisconnected', function(client) {
     if (response.statusCode == 200) {
       debug('Update device status successfully');
     } else {
-      debug('Failed to update device status');
+      debug('Failed to update device status: ', body);
     }
     
   });
