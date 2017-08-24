@@ -19,12 +19,15 @@ var settings = {
 var app = new server.start(settings);
 
 app.on('published', function(packet, client) {
-  if (packet.topic.indexOf('$SYS') === 0 || !client.authKey || packet.topic.indexOf(topicPrefix) !== 0) 
+  if (packet.topic.indexOf('$SYS') === 0 || !client || !client.authKey)
     return; // doesn't print stats info
 
   debug('ON PUBLISHED', packet.payload.toString(), 'on topic', packet.topic);
 
   var topicPrefix = '/' + client.authKey;
+
+  if (packet.topic.indexOf(topicPrefix) !== 0) 
+    return;  
   
   // save message to backend  
   var topic = packet.topic.replace(topicPrefix, '');
@@ -47,7 +50,13 @@ app.on('published', function(packet, client) {
       debug('Failed to send message to backend: ', error);
       return;
     }
-    debug('Sent message to backend successfully');
+
+    if (response.statusCode == 200) {
+      debug('Sent message to backend successfully');
+    } else {
+      debug('Failed to send message to backend');
+    }   
+    
   });
 });
 
@@ -99,7 +108,13 @@ app.on('clientDisconnected', function(client) {
       debug('Failed to update device status: ', error);
       return;
     }
-    debug('Update device status successfully');
+
+    if (response.statusCode == 200) {
+      debug('Update device status successfully');
+    } else {
+      debug('Failed to update device status');
+    }
+    
   });
 });
 
