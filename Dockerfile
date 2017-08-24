@@ -12,11 +12,12 @@ RUN mkdir -p /usr/src/app
 
 WORKDIR /usr/src/app
 
-RUN npm install -g foreman && npm cache clean
+RUN ls && npm install -g foreman && npm cache clean
 ADD package.json /usr/src/app/
 RUN npm install && npm cache clean
 ADD . /usr/src/app
 
 EXPOSE 1883
+EXPOSE 8083
 
 CMD [ "nf", "start" ]

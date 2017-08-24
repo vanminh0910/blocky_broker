@@ -15,5 +15,6 @@ node_modules
 # Ignore logs
 *.log
 
-# Procfile env
-.production.env
+# env files
+prod.env
+staging.env

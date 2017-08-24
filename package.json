@@ -1,8 +1,8 @@
 {
-  "name": "lelylan.mqtt",
-  "description": "Lelylan MQTT broket",
+  "name": "blocky.broker",
+  "description": "Blocky MQTT broket",
   "version": "0.1.0",
-  "author": "Lelylan Dev Team <dev@lelylan.com>",
+  "author": "Blocky Dev Team <vanminh0910@gmail.com>",
   "scripts": {
     "start": "node app.js",
     "test": "make bail"
@@ -16,7 +16,7 @@
     "mosca": "^0.26.2",
     "mqtt": "~0.3.1",
     "redis": "^0.12.1",
-    "request": "^2.11.4"
+    "request": "^2.81.0"
   },
   "engines": {
     "node": "~0.10.x",

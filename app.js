@@ -1,26 +1,104 @@
+var request = require('request');
 var server = require('./lib/server');
 
 var debug  = require('debug')('broker');
 
 var ascoltatore = {
-      type: 'redis',
-      redis: require('redis'),
-      db: 12,
-      port: 6379,
-      host:  'redis'}; //process.env.REDIS_HOST
+  type: 'redis',
+  redis: require('redis'),
+  db: 12,
+  port: 6379,
+  host:  'redis'
+}; //process.env.REDIS_HOST
 
 var settings = {
-      port: process.env.NODE_PORT || 1883,
-      backend: ascoltatore };
+  port: process.env.NODE_PORT || 1883,
+  backend: ascoltatore 
+};
 
 var app = new server.start(settings);
 
 app.on('published', function(packet, client) {
-  if (packet.topic.indexOf('$SYS') === 0) return; // doesn't print stats info
-    debug('ON PUBLISHED', packet.payload.toString(), 'on topic', packet.topic);
+  var topicPrefix = '/' + client.authKey;
+  if (packet.topic.indexOf('$SYS') === 0 && packet.topic.indexOf(topicPrefix) !== 0) 
+    return; // doesn't print stats info
+  
+  debug('ON PUBLISHED', packet.payload.toString(), 'on topic', packet.topic);
+  
+  // save message to backend  
+  var topic = packet.topic.replace(topicPrefix, '');
+  var postData = {
+    authKey: client.authKey,
+    topic: topic,
+    payload: packet.payload.toString()
+  }
+
+  request({
+    method: 'post',
+    body: postData,
+    json: true,
+    uri: process.env.PROCESS_MESSAGE_API,
+    headers: {
+      'x-api-key': process.env.API_KEY
+    }
+  }, function (error, response, body) {
+    if (error) {
+      debug('Failed to send message to backend: ', error);
+      return;
+    }
+    debug('Sent message to backend successfully');
+  });
 });
 
 app.on('ready', function() {
-  debug('MQTT Server listening on port', process.env.NODE_PORT)
+  debug('MQTT Server listening on port', process.env.NODE_PORT);
+});
+
+app.on('clientConnected', function(client) {
+  debug('client connected', client.id);
+});
+
+app.on('clientDisconnected', function(client) {
+
+  // if client is not device, ignore this event
+  if (!client.chipId)
+    return;
+
+  debug('Device going offline', client.chipId);
+
+  // broadcast message for web clients to update device status
+  var message = {
+    topic: '/' + client.authKey + '/' + client.chipId + '/offline',
+    payload: '0',
+    qos: 0, // 0, 1, or 2
+    retain: false // or true
+  };
+
+  app.publish(message, function() {
+    debug('Send message to inform device being offline!');
+  });
+
+  // update device status to offline
+  var postData = {
+    authKey: client.authKey,
+    chipId: client.chipId,
+    status: 0 //0: offline, 1: online
+  }
+
+  request({
+    method: 'post',
+    body: postData,
+    json: true,
+    uri: process.env.UPDATE_DEVICE_STATUS_API,
+    headers: {
+      'x-api-key': process.env.API_KEY
+    }
+  }, function (error, response, body) {
+    if (error) {
+      debug('Failed to update device status: ', error);
+      return;
+    }
+    debug('Update device status successfully');
+  });
 });
 
