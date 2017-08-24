@@ -19,11 +19,12 @@ var settings = {
 var app = new server.start(settings);
 
 app.on('published', function(packet, client) {
-  var topicPrefix = '/' + client.authKey;
-  if (packet.topic.indexOf('$SYS') === 0 && packet.topic.indexOf(topicPrefix) !== 0) 
+  if (packet.topic.indexOf('$SYS') === 0 || !client.authKey || packet.topic.indexOf(topicPrefix) !== 0) 
     return; // doesn't print stats info
-  
+
   debug('ON PUBLISHED', packet.payload.toString(), 'on topic', packet.topic);
+
+  var topicPrefix = '/' + client.authKey;
   
   // save message to backend  
   var topic = packet.topic.replace(topicPrefix, '');
