@@ -19,7 +19,7 @@ var settings = {
 var app = new server.start(settings);
 
 app.on('published', function(packet, client) {
-  if (packet.topic.indexOf('$SYS') === 0)
+  if (packet.topic.indexOf('$SYS') === 0 || !client || client === null)
     return; // doesn't print stats info
 
   debug('ON PUBLISHED', packet.payload.toString(), 'on topic', packet.topic);
@@ -37,7 +37,6 @@ app.on('published', function(packet, client) {
     topic: topic,
     data: packet.payload.toString()
   }
-
 
   request({
     method: 'post',
