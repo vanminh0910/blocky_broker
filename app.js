@@ -13,28 +13,28 @@ var ascoltatore = {
 
 var settings = {
   port: process.env.NODE_PORT || 1883,
-  backend: ascoltatore 
+  backend: ascoltatore
 };
 
 var app = new server.start(settings);
 
 app.on('published', function(packet, client) {
-  if (packet.topic.indexOf('$SYS') === 0 || !client || client === null)
+  if (packet.topic.indexOf('$SYS') === 0 || !client || client === null || !client.authKey)
     return; // doesn't print stats info
 
   debug('ON PUBLISHED', packet.payload.toString(), 'on topic', packet.topic);
-  
+
   var topicPrefix = '/' + client.authKey;
 
-  if (packet.topic.indexOf(topicPrefix) !== 0 || packet.payload.toString() == '') 
+  if (packet.topic.indexOf(topicPrefix) !== 0 || packet.payload.toString() == '')
     return;
-  
-  // save message to backend  
+
+  // save message to backend
   var topic = packet.topic.replace(topicPrefix, '');
 
   var postData = {
     authKey: client.authKey.toString(),
-    topic: topic,
+    topic: topic.toString(),
     data: packet.payload.toString()
   }
 
@@ -55,9 +55,9 @@ app.on('published', function(packet, client) {
     if (response.statusCode == 200) {
       debug('Sent message to backend successfully');
     } else {
-      debug(body);
+      debug(body.toString());
       debug('Failed to send message to backend');
-    }    
+    }
   });
 });
 
@@ -115,7 +115,7 @@ app.on('clientDisconnected', function(client) {
     } else {
       debug('Failed to update device status: ', body);
     }
-    
+
   });
 });
 
