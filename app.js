@@ -24,52 +24,46 @@ app.on('published', function(packet, client) {
 
   debug('ON PUBLISHED', packet.payload.toString(), 'on topic', packet.topic);
 
-  try {
+  var topicPrefix = '/' + client.authKey;
 
-    var topicPrefix = '/' + client.authKey;
+  if (packet.topic.indexOf(topicPrefix) !== 0 || packet.payload.toString() == '')
+    return;
 
-    if (packet.topic.indexOf(topicPrefix) !== 0 || packet.payload.toString() == '')
-      return;
+  // save message to backend
+  var topic = packet.topic.replace(topicPrefix, '');
 
-    // save message to backend
-    var topic = packet.topic.replace(topicPrefix, '');
+  if (!topic) {
+    debug('Blank topic used. Ignore this message');
+    return;
+  }      
 
-    if (!topic) {
-      debug('Blank topic used. Ignore this message');
-      return;
-    }
-      
-
-    var postData = {
-      authKey: client.authKey.toString(),
-      topic: topic.toString(),
-      data: packet.payload.toString()
-    }
-
-    request({
-      method: 'post',
-      body: postData,
-      json: true,
-      uri: process.env.PROCESS_MESSAGE_API,
-      headers: {
-        'x-api-key': process.env.API_KEY
-      }
-    }, function (error, response, body) {
-      if (error) {
-        debug('Failed to send message to backend: ', error);
-        return;
-      }
-
-      if (response.statusCode == 200) {
-        debug('Sent message to backend successfully');
-      } else {
-        debug(body.toString());
-        debug('Failed to send message to backend');
-      }
-    });
-  } catch (e) {
-    debug('Exception when processing publish event', e);
+  var postData = {
+    authKey: client.authKey.toString(),
+    topic: topic.toString(),
+    data: packet.payload.toString()
   }
+
+  request({
+    method: 'post',
+    body: postData,
+    json: true,
+    uri: process.env.PROCESS_MESSAGE_API,
+    headers: {
+      'x-api-key': process.env.API_KEY
+    }
+  }, function (error, response, body) {
+    if (error) {
+      debug('Failed to send message to backend: ', error);
+      return;
+    }
+
+    if (response.statusCode == 200) {
+      debug('Sent message to backend successfully');
+    } else {
+      debug(body.toString());
+      debug('Failed to send message to backend');
+    }
+  });
 });
 
 app.on('ready', function() {

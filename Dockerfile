@@ -1,4 +1,4 @@
-FROM node:0.10
+FROM node:8.4
 MAINTAINER Federico Gonzalez <https://github.com/fedeg>
 
 RUN apt-get update -qq \
@@ -12,9 +12,9 @@ RUN mkdir -p /usr/src/app
 
 WORKDIR /usr/src/app
 
-RUN ls && npm install -g foreman && npm cache clean
+RUN ls && npm install -g foreman && npm cache clean --force
 ADD package.json /usr/src/app/
-RUN npm install && npm cache clean
+RUN npm install && npm cache clean --force
 ADD . /usr/src/app
 
 EXPOSE 1883
