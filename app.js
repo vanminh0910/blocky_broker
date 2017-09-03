@@ -24,7 +24,7 @@ app.on('published', function(packet, client) {
 
   debug('ON PUBLISHED', packet.payload.toString(), 'on topic', packet.topic);
 
-  var topicPrefix = '/' + client.authKey;
+  var topicPrefix = '/' + client.authKey + '/';
 
   if (packet.topic.indexOf(topicPrefix) !== 0 || packet.payload.toString() == '')
     return;
