@@ -3,6 +3,9 @@ var server = require('./lib/server');
 
 var debug  = require('debug')('broker');
 
+//var SECURE_KEY = '/etc/letsencrypt/live/broker.getblocky.com/privkey.pem'; //__dirname + '/../key.pem';
+//var SECURE_CERT = '/etc/letsencrypt/live/broker.getblocky.com/cert.pem'; //__dirname + '/../cert.pem';
+
 var ascoltatore = {
   type: 'redis',
   redis: require('redis'),
@@ -13,7 +16,23 @@ var ascoltatore = {
 
 var settings = {
   port: process.env.NODE_PORT || 1883,
-  backend: ascoltatore
+  backend: ascoltatore,
+  allowNonSecure: true,
+  secure: {
+    port: process.env.SECURE_PORT || 8443,
+    keyPath: process.env.SECURE_KEY,
+    certPath: process.env.SECURE_CERT,
+  },
+  http: {
+    port: process.env.WS_PORT || 8083,
+    bundle: true,
+    static: './'
+  },
+  https: {
+    port: process.env.WSS_PORT || 8883,
+    bundle: true,
+    static: './'
+  }
 };
 
 var app = new server.start(settings);
