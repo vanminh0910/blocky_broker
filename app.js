@@ -3,16 +3,13 @@ var server = require('./lib/server');
 
 var debug  = require('debug')('broker');
 
-//var SECURE_KEY = '/etc/letsencrypt/live/broker.getblocky.com/privkey.pem'; //__dirname + '/../key.pem';
-//var SECURE_CERT = '/etc/letsencrypt/live/broker.getblocky.com/cert.pem'; //__dirname + '/../cert.pem';
-
 var ascoltatore = {
   type: 'redis',
   redis: require('redis'),
   db: 12,
   port: 6379,
-  host:  'redis'
-}; //process.env.REDIS_HOST
+  host: 'redis'
+};
 
 var settings = {
   port: process.env.NODE_PORT || 1883,
@@ -43,12 +40,13 @@ app.on('published', function(packet, client) {
 
   debug('ON PUBLISHED', packet.payload.toString(), 'on topic', packet.topic);
 
-  var topicPrefix = '/' + client.authKey + '/';
+  var topicPrefix = client.authKey + '/';
 
+  // not process system or invalid message
   if (packet.topic.indexOf(topicPrefix) !== 0 || packet.payload.toString() == '')
     return;
 
-  // save message to backend
+  // pass user message to backend for further processing
   var topic = packet.topic.replace(topicPrefix, '');
 
   if (!topic) {
@@ -58,7 +56,7 @@ app.on('published', function(packet, client) {
 
   var postData = {
     authKey: client.authKey.toString(),
-    topic: topic.toString(),
+    topic: packet.topic.toString(),
     data: packet.payload.toString()
   }
 
@@ -94,7 +92,6 @@ app.on('clientConnected', function(client) {
 });
 
 app.on('clientDisconnected', function(client) {
-
   // if client is not device, ignore this event
   if (!client.chipId)
     return;
@@ -102,44 +99,48 @@ app.on('clientDisconnected', function(client) {
   debug('Device going offline', client.chipId);
 
   // broadcast message for web clients to update device status
+  var payload = {
+    chipId: client.chipId,
+    authKey: client.authKey.toString(),
+    event: 'offline'
+  }
   var message = {
-    topic: '/' + client.authKey + '/' + client.chipId + '/offline',
-    payload: '0',
+    topic: client.authKey.toString() + '/sys/',
+    payload: JSON.stringify(payload),
     qos: 0, // 0, 1, or 2
     retain: false // or true
   };
 
   app.publish(message, function() {
-    debug('Send message to inform device being offline!');
+    debug('Sent mqtt message to inform device being offline!');
   });
 
-  // update device status to offline
   var postData = {
     authKey: client.authKey.toString(),
-    chipId: client.chipId.toString(),
-    status: 0 //0: offline, 1: online
+    topic: message.topic,
+    data: message.payload
   }
 
   request({
     method: 'post',
     body: postData,
     json: true,
-    uri: process.env.UPDATE_DEVICE_STATUS_API,
+    uri: process.env.PROCESS_MESSAGE_API,
     headers: {
       'x-api-key': process.env.API_KEY
     }
   }, function (error, response, body) {
     if (error) {
-      debug('Failed to update device status: ', error);
+      debug('Failed to send message to backend: ', error);
       return;
     }
 
     if (response.statusCode == 200) {
-      debug('Update device status successfully');
+      debug('Sent message to backend successfully');
     } else {
-      debug('Failed to update device status: ', body);
+      debug(body.toString());
+      debug('Failed to send message to backend');
     }
-
   });
 });
 

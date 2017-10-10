@@ -17,7 +17,7 @@ ADD package.json /usr/src/app/
 RUN npm install && npm cache clean --force
 ADD . /usr/src/app
 
-RUN bash && openssl genrsa -des3 -passout pass:x -out privkey.key 2048 && \
+RUN openssl genrsa -des3 -passout pass:x -out privkey.key 2048 && \
     openssl rsa -passin pass:x -in privkey.key -out privkey.pem && \
     openssl req -new -key privkey.pem -out privkey.csr \
         -subj "/C=UK/ST=Warwickshire/L=Leamington/O=OrgName/OU=IT Department/CN=example.com" && \
