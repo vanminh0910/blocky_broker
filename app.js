@@ -70,6 +70,7 @@ app.on('published', function(packet, client) {
     }
   }, function (error, response, body) {
     if (error) {
+      console.log(error);
       debug('Failed to send message to backend: ', error);
       return;
     }
@@ -77,7 +78,8 @@ app.on('published', function(packet, client) {
     if (response.statusCode == 200) {
       debug('Sent message to backend successfully');
     } else {
-      debug(body.toString());
+      debug(body);
+      console.log(body);
       debug('Failed to send message to backend');
     }
   });
@@ -138,7 +140,8 @@ app.on('clientDisconnected', function(client) {
     if (response.statusCode == 200) {
       debug('Sent message to backend successfully');
     } else {
-      debug(body.toString());
+      debug(body);
+      console.log(body);
       debug('Failed to send message to backend');
     }
   });
